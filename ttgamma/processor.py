@@ -298,7 +298,6 @@ class TTGammaProcessor(processor.ProcessorABC):
         #select tight muons
         # tight muons should have a pt of at least 30 GeV, |eta| < 2.4, pass the tight muon ID cut (tightID variable), and have a relative isolation of less than 0.15
         #import pdb; pdb.set_trace()
-
         muonSelectTight = ( (muons.pt>30) &
                            (abs(muons.eta)<2.4) &
                            (muons.relIso<0.15) &
@@ -327,12 +326,15 @@ class TTGammaProcessor(processor.ProcessorABC):
         # 1. ADD SELECTION
         #select tight electrons
         # tight electrons should have a pt of at least 35 GeV, |eta| < 2.1, pass the cut based electron id (cutBased variable in NanoAOD>=4), and pass the etaGap, D0, and DZ cuts defined above
-        electronSelectTight = (electrons.pt > 35 &
-                               (abs(electrons.eta)<2.1) &
-                               ((abs(electrons.eta) < 1.4442) | (abs(electrons.eta) > 1.566)) &
-                               (electrons.cutBased>=4) 
-                               )
 
+        electronSelectTight = ((electrons.pt>35) & 
+                               (abs(electrons.eta)<2.1) & 
+                               (electrons.cutBased>=4) &
+                               eleEtaGap &      
+                               elePassD0 & 
+                               elePassDZ
+                              )
+ 
         #select loose electrons
         electronSelectLoose = ((electrons.pt>15) & 
                                (abs(electrons.eta)<2.4) & 
@@ -354,7 +356,6 @@ class TTGammaProcessor(processor.ProcessorABC):
         #select the subset of electrons passing the electronSelectTight and electronSelectLoose cuts
         tightElectron = electrons[electronSelectTight]
         looseElectron = electrons[electronSelectLoose]
-
 
 
         
@@ -409,10 +410,7 @@ class TTGammaProcessor(processor.ProcessorABC):
         tightPhotons = photons[photonSelectTight]
         #select loosePhotons, the subset of photons passing the photonSelect cut and all photonID cuts without the charged hadron isolation cut applied
         loosePhotons = photons[photonSelectLoose]
-        
-
-
-
+       
 
         #update jet kinematics based on jete energy systematic uncertainties
         if not isData:
@@ -460,11 +458,10 @@ class TTGammaProcessor(processor.ProcessorABC):
                      (abs(jets.eta) < 2.4) &
                      ((jets.jetId >> 1 & 1)==1) &
                      (dRjetmu & dRjetele & dRjetpho) )
-        
+       
         # 1. ADD SELECTION
         #select the subset of jets passing the jetSelect cuts
         tightJets = jets[jetSelect]
-
 
 
         #find jets passing DeepCSV medium working point
@@ -474,7 +471,7 @@ class TTGammaProcessor(processor.ProcessorABC):
         # 1. ADD SELECTION
         # select the subset of tightJets which pass the Deep CSV tagger
         bTaggedJets = jets[jetSelectBtag]
-        
+       
 
 
         #####################
@@ -491,7 +488,6 @@ class TTGammaProcessor(processor.ProcessorABC):
         muTrigger = df['HLT_IsoMu24'] | df['HLT_IsoTkMu24']
         eleTrigger = df['HLT_Ele27_WPTight_Gsf']
         
-
         # 1. ADD SELECTION
         #  Event selection
         #oneMuon, should be true if there is exactly one tight muon in the event (hint, the .counts method returns the number of objects in each row of a jagged array)
@@ -580,31 +576,31 @@ class TTGammaProcessor(processor.ProcessorABC):
         ##################
         # EVENT VARIABLES
         ##################
-        """
-        # PART 2A: Uncomment to begin implementing event variables
         
+        # PART 2A: Uncomment to begin implementing event variables
         # 2. DEFINE VARIABLES
         ## Define M3, mass of 3-jet pair with highest pT
         # find all possible combinations of 3 tight jets in the events (hint: using the .p4.choose() method of jagged arrays to do combinations of the TLorentzVectors) 
-        triJet = ?
+        triJet = tightJets.p4.choose(3) # need to update
         # calculate
-        triJetPt = ?
-        triJetMass = ?
+        triJetPt = (triJet.i0 + triJet.i1 + triJet.i2).pt
+        triJetMass = (triJet.i0 + triJet.i1 + triJet.i2).mass
+        
         # define the M3 variable, the triJetMass of the combination with the highest triJetPt value (hint: using the .argmax() method)
-        M3 = ?
+        M3 = triJetMass[ triJetPt.argmax() ]
 
         leadingPhoton = tightPhotons[:,:1]
         leadingPhotonLoose = loosePhotons[:,:1]
 
         # 2. DEFINE VARIABLES
         # define egammaMass, mass of combinations of tightElectron and leadingPhoton (hint: using the .cross() method)
-        egammaPairs = ?
-        egammaMass = ?
+        egammaPairs = tightElectron.p4.cross( leadingPhoton.p4)
+        egammaMass = tightElectron.p4.cross( leadingPhoton.mass)
         # define egammaMass, mass of combinations of tightElectron and leadingPhoton (hint: using the .cross() method)
-        mugammaPairs = ?
-        mugammaMass = ?
-       
+        mugammaPairs = tightMuon.p4.cross( leadingPhoton.p4 )
+        mugammaMass = tightMuon.p4.cross( leadingPhoton.mass )
         
+        """ 
         ###################
         # PHOTON CATEGORIES
         ###################
