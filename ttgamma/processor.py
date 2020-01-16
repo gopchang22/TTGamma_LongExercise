@@ -98,7 +98,6 @@ class TTGammaProcessor(processor.ProcessorABC):
         
         ### Accumulator for holding histograms
         self._accumulator = processor.dict_accumulator({
-             #3. ADD HISTOGRAMS
 
             'photon_pt':hist.Hist("Counts", dataset_axis, pt_axis, phoCategory_axis, lep_axis, systematic_axis),
             'photon_eta':hist.Hist("Counts", dataset_axis, eta_axis, phoCategory_axis, lep_axis, systematic_axis),
@@ -404,10 +403,14 @@ class TTGammaProcessor(processor.ProcessorABC):
         photonSelectTight = photonSelect & photonID
         photonSelectLoose = photonSelect & photonID_NoChIso
         
+        print(photons.shape)
+
+
         # 1. ADD SELECTION
         #  Object selection
         #select tightPhotons, the subset of photons passing the photonSelect cut and the photonID cut
         tightPhotons = photons[photonSelectTight]
+        print(tightPhotons.shape)
         #select loosePhotons, the subset of photons passing the photonSelect cut and all photonID cuts without the charged hadron isolation cut applied
         loosePhotons = photons[photonSelectLoose]
        
@@ -466,8 +469,9 @@ class TTGammaProcessor(processor.ProcessorABC):
 
         #find jets passing DeepCSV medium working point
         bTagWP = 0.6321   #2016 DeepCSV working point
+        isbTagged = jets.btag > bTagWP
 
-        jetSelectBtag = jetSelect & (jets.btag > bTagWP) 
+        jetSelectBtag = jetSelect & isbTagged 
         # 1. ADD SELECTION
         # select the subset of tightJets which pass the Deep CSV tagger
         bTaggedJets = jets[jetSelectBtag]
@@ -548,8 +552,8 @@ class TTGammaProcessor(processor.ProcessorABC):
                         looseElectronSel
                         )
 
-        jet_eventSelection = ( bJetVeto & fourJet )
-        jet_eventSelection3j0t = ( onebJet & threeJet)
+        jet_eventSelection = ( onebJet & fourJet )
+        jet_eventSelection3j0t = ( bJetVeto & threeJet)
 
 
         #create a selection object
@@ -600,8 +604,7 @@ class TTGammaProcessor(processor.ProcessorABC):
         # define egammaMass, mass of combinations of tightElectron and leadingPhoton (hint: using the .cross() method)
         mugammaPairs = tightMuon.p4.cross( leadingPhoton.p4 )
         mugammaMass = ( mugammaPairs.i0 + mugammaPairs.i1 ).mass
-        
-        
+
         ###################
         # PHOTON CATEGORIES
         ###################
@@ -610,7 +613,7 @@ class TTGammaProcessor(processor.ProcessorABC):
 
         phoCategory = np.ones(df.size)
         phoCategoryLoose = np.ones(df.size)
-
+        
         # PART 2B: Uncomment to begin implementing photon categorization
        
         if not isData:
@@ -635,17 +638,18 @@ class TTGammaProcessor(processor.ProcessorABC):
             # 2. DEFINE VARIABLES
             # define the photon categories for tight photon events
             # a genuine photon is a reconstructed photon which is matched to a generator level photon, and does not have a hadronic parent
-            isGenPho = matchedPho and not hadronicParent
+
+            isGenPho = matchedPho & np.invert(hadronicParent) 
             # a hadronic photon is a reconstructed photon which is matched to a generator level photon, but has a hadronic parent
-            isHadPho = matchedPho and hadronicParent
+            isHadPho = matchedPho & hadronicParent
             # a misidentified electron is a reconstructed photon which is 
             isMisIDele = matchedEle
             # a hadronic/fake photon is a reconstructed photon that does not fall within any of the above categories
-            isHadFake = not matchedPho and not matchedEle
+            isHadFake = np.invert(isGenPho) & np.invert(isHadPho) & np.invert(isMisIDele)
+
             
             #define integer definition for the photon category axis
             phoCategory = 1*isGenPho + 2*isMisIDele + 3*isHadPho + 4*isHadFake
-            
 
             # do photon matching for loose photons as well
             # look through parentage to find if any hadrons in genPhoton parent history
@@ -665,21 +669,23 @@ class TTGammaProcessor(processor.ProcessorABC):
             #####
             # 2. DEFINE VARIABLES
             # a genuine photon is a reconstructed photon which is matched to a generator level photon, and does not have a hadronic parent
-            isGenPhoLoose = matchedPhoLoose and not hadronicParent
+
+            isGenPhoLoose = matchedPhoLoose & np.invert(hadronicParent)
             # a hadronic photon is a reconstructed photon which is matched to a generator level photon, but has a hadronic parent
-            isHadPhoLoose = matchedPhoLoose and hadronicParent
+            isHadPhoLoose = matchedPhoLoose & hadronicParent
             # a misidentified electron is a reconstructed photon which is 
             isMisIDeleLoose = matchedEleLoose
             # a hadronic/fake photon is a reconstructed photon that does not fall within any of the above categories
-            isHadFakeLoose = not matchedPhoLoose and not matchedEleLoose
+            isHadFakeLoose = np.invert(isGenPhoLoose) & np.invert(isHadPhoLoose) & np.invert(isMisIDeleLoose)
+
 
             #define integer definition for the photon category axis
             phoCategoryLoose = 1*isGenPhoLoose + 2*isMisIDeleLoose + 3*isHadPhoLoose + 4*isHadFakeLoose
-            """
+            
         ################
         # EVENT WEIGHTS
         ################
-
+        
         #create a processor Weights object, with the same length as the number of events in the chunk
         weights = processor.Weights(len(df['event']))
   
@@ -701,11 +707,11 @@ class TTGammaProcessor(processor.ProcessorABC):
             # calculate pileup weights and variations
             # use the puLookup, puLookup_Up, and puLookup_Down lookup functions to find the nominal and up/down systematic weights
             # the puLookup function is called with the full dataset name (datasetFull) and the number of true interactions
-            puWeight = ?
-            puWeight_Up = ?
-            puWeight_Down = ?
+            puWeight = puLookup(datasetFull, nPUTrue)
+            puWeight_Up = puLookup_Up(datasetFull, nPUTrue)
+            puWeight_Down = puLookup_Down(datasetFull, nPUTrue)
             # add the puWeight and it's uncertainties to the weights container
-            weights.add('puWeight',weight=?, weightUp=?, weightDown=?)
+            weights.add('puWeight',weight=puWeight, weightUp=puWeight_Up, weightDown=puWeight_Down)
 
 
             eleID = self.ele_id_sf(tightElectron.eta, tightElectron.pt)
@@ -718,7 +724,7 @@ class TTGammaProcessor(processor.ProcessorABC):
             eleSF_down = ((eleID - eleIDerr) * (eleRECO - eleRECOerr)).prod()
             # 4. SYSTEMATICS
             # add electron efficiency weights to the weight container
-            weights.add('eleEffWeight',weight=?, weightUp=?, weightDown=?)
+            weights.add('eleEffWeight',weight=eleSF, weightUp=eleSF_up, weightDown=eleSF_down)
 
             muID = self.mu_id_sf(tightMuon.eta, tightMuon.pt)
             muIDerr = self.mu_id_err(tightMuon.eta, tightMuon.pt)
@@ -733,7 +739,7 @@ class TTGammaProcessor(processor.ProcessorABC):
 
             # 4. SYSTEMATICS
             # add electron efficiency weights to the weight container
-            weights.add('muEffWeight',weight=?, weightUp=?, weightDown=?)
+            weights.add('muEffWeight',weight=muSF, weightUp=muSF_up, weightDown=muSF_down)
 
             #btag key name
             #name / working Point / type / systematic / jetType
@@ -785,9 +791,10 @@ class TTGammaProcessor(processor.ProcessorABC):
             btagEfficienciesData_l_up   = btagEfficiencies*bJetSF_light_up
             btagEfficienciesData_l_down = btagEfficiencies*bJetSF_light_down
 
+            btagged = tightJets.btag > bTagWP
             ##probability is the product of all efficiencies of tagged jets, times product of 1-eff for all untagged jets
             ## https://twiki.cern.ch/twiki/bin/view/CMS/BTagSFMethods#1a_Event_reweighting_using_scale
-            pMC   = btagEfficiencies[btagged].prod()     * (1.-btagEfficiencies[np.invert(btagged)]).prod() 
+            pMC  = btagEfficiencies[btagged].prod()     * (1.-btagEfficiencies[np.invert(btagged)]).prod() 
             pData = btagEfficienciesData[btagged].prod() * (1.-btagEfficienciesData[np.invert(btagged)]).prod()
             pData_b_up = btagEfficienciesData_b_up[btagged].prod() * (1.-btagEfficienciesData_b_up[np.invert(btagged)]).prod()
             pData_b_down = btagEfficienciesData_b_down[btagged].prod() * (1.-btagEfficienciesData_b_down[np.invert(btagged)]).prod()
@@ -810,7 +817,7 @@ class TTGammaProcessor(processor.ProcessorABC):
 
 
 
-
+            
             #in some samples, generator systemtatics are not available, in those case the systematic weights of 1. are used
             try:
                 generatorWeight = df['Generator_weight']
@@ -860,13 +867,13 @@ class TTGammaProcessor(processor.ProcessorABC):
                 weights.add('ISR',weight=np.ones(df.size), weightUp=PSWeights[:,2], weightDown=PSWeights[:,0])
                 weights.add('FSR',weight=np.ones(df.size), weightUp=PSWeights[:,3], weightDown=PSWeights[:,1])
 
-            else:
+            except:
                 weights.add('ISR',    weight=np.ones(df.size),weightUp=np.ones(df.size),weightDown=np.ones(df.size))
                 weights.add('FSR',    weight=np.ones(df.size),weightUp=np.ones(df.size),weightDown=np.ones(df.size))
                 weights.add('PDF',    weight=np.ones(df.size),weightUp=np.ones(df.size),weightDown=np.ones(df.size))
                 weights.add('Q2Scale',weight=np.ones(df.size),weightUp=np.ones(df.size),weightDown=np.ones(df.size))
-
-
+            
+       
 
         ###################
         # FILL HISTOGRAMS
@@ -874,20 +881,20 @@ class TTGammaProcessor(processor.ProcessorABC):
         # PART 3: Uncomment to add histograms
         
         #list of systematics
-        systList = ['nowegiht','nominal']
+        systList = ['noweight','nominal']
 
         # PART 4: SYSTEMATICS
         # uncomment the full list after systematics have been implemented
-        #systList = ['noweight','nominal','puWeightUp','puWeightDown','muEffWeightUp','muEffWeightDown','eleEffWeightUp','eleEffWeightDown','btagWeight_lightUp','btagWeight_lightDown','btagWeight_heavyUp','btagWeight_heavyDown', 'ISRUp', 'ISRDown', 'FSRUp', 'FSRDown', 'PDFUp', 'PDFDown', 'Q2ScaleUp', 'Q2ScaleDown']
+        systList = ['noweight','nominal','puWeightUp','puWeightDown','muEffWeightUp','muEffWeightDown','eleEffWeightUp','eleEffWeightDown','btagWeight_lightUp','btagWeight_lightDown','btagWeight_heavyUp','btagWeight_heavyDown', 'ISRUp', 'ISRDown', 'FSRUp', 'FSRDown', 'PDFUp', 'PDFDown', 'Q2ScaleUp', 'Q2ScaleDown']
 
         if not self.jetSyst=='nominal':
             systList=[self.jetSyst]
 
         if isData:
             systList = ['noweight']
-
-        for syst in systList:
-            
+        
+        for syst in systList: 
+          
             #find the event weight to be used when filling the histograms
             weightSyst = syst
             #in the case of 'nominal', or the jet energy systematics, no weight systematic variation is used (weightSyst=None)
@@ -911,64 +918,66 @@ class TTGammaProcessor(processor.ProcessorABC):
                 # 3. GET HISTOGRAM EVENT SELECTION
                 #  use the selection.all() method to select events passing the lepton selection, 4-jet 1-tag jet selection, and either the one-photon or loose-photon selections
                 #  ex: selection.all( *('LIST', 'OF', 'SELECTION', 'CUTS') )
-                phosel = selection.all( *(???))
-                phoselLoose = selection.all( *(???) )
-
-                # 3. FILL HISTOGRAMS
+                phosel = selection.all( *(lepSel,'onePho','jetSel'))
+                phoselLoose = selection.all( *(lepSel, 'loosePho','jetSel') )
+                
+                
+                #3. FILL HISTOGRAMS
                 #    fill photon_pt and photon_eta, using the tightPhotons array, from events passing the phosel selection
                 output['photon_pt'].fill(dataset=dataset,
-                                         pt=?,
-                                         category=?,
+                                         pt=tightPhotons[phosel].pt.flatten(),
+                                         category=phoCategory[phosel],
                                          lepFlavor=lepton,
                                          systematic=syst,
-                                         weight=?)
-    
+                                         weight=evtWeight[phosel].flatten()
+                                 )
+                
                 output['photon_eta'].fill(dataset=dataset,
-                                         pt=?,
-                                         category=?,
+                                         eta=tightPhotons[phosel].eta.flatten(),
+                                         category=phoCategory[phosel],
                                          lepFlavor=lepton,
                                          systematic=syst,
-                                         weight=?)
+                                         weight=evtWeight[phosel].flatten())
 
-                #    fill photon_chIso histogram, using the loosePhotons array (photons passing all cuts, except the charged hadron isolation cuts)
+                #     fill photon_chIso histogram, using the loosePhotons array (photons passing all cuts, except the charged hadron isolation cuts)
                 output['photon_chIso'].fill(dataset=dataset,
-                                            chIso=?,
-                                            category=?,
+                                            chIso=loosePhotons[phoselLoose].chIso.flatten(),
+                                            category=phoCategoryLoose[phoselLoose],
                                             lepFlavor=lepton,
                                             systematic=syst,
-                                            weight=?)
+                                            weight=evtWeight[phoselLoose].flatten())
                 
                 #    fill M3 histogram, for events passing the phosel selection
                 output['M3'].fill(dataset=dataset,
-                                  M3=?,
-                                  category=?,
+                                  M3=M3[phosel].flatten(),
+                                  category=phoCategory[phosel],
                                   lepFlavor=lepton,
                                   systematic=syst,
-                                  weight=?)
+                                  weight=evtWeight[phosel].flatten())
 
                 
             
             # 3. GET HISTOGRAM EVENT SELECTION
             #  use the selection.all() method to select events passing the eleSel or muSel selection, 3-jet 0-btag selection, and have exactly one photon
-            phosel_3j0t_e  = selection.all( *('eleSel', ???) )
-            phosel_3j0t_mu = selection.all( *('muSel', ???) )
+            phosel_3j0t_e  = selection.all( *('eleSel', 'jetSel_3j0t','onePho') )
+            phosel_3j0t_mu = selection.all( *('muSel', 'jetSel_3j0t', 'onePho') )
 
             # 3. FILL HISTOGRAMS
             # fill photon_lepton_mass_3j0t histogram, using the egammaMass array, for events passing the phosel_3j0t_e 
-            output['photon_lepton_mass_3j0t'].fill(dataset=dataset,
-                                                   mass=?,
-                                                   category=?
-                                                   lepFlavor='electron',
-                                                   systematic=syst,
-                                                   weight=?)
-            output['photon_lepton_mass_3j0t'].fill(dataset=dataset,
-                                                   mass=?,
-                                                   category=?,
-                                                   lepFlavor='muon',
-                                                   systematic=syst,
-                                                   weight=?)
+            #output['photon_lepton_mass_3j0t'].fill(dataset=dataset,
+            #                                       mass=egammaMass[phosel_3j0t_e].flatten(),
+            #                                       category=phoCategory[phosel_3j0t_e],
+            #                                       lepFlavor='electron',
+            #                                       systematic=syst,
+            #                                       weight=evtWeight[phosel_3j0t_e].flatten())
+            #output['photon_lepton_mass_3j0t'].fill(dataset=dataset,
+            #                                       mass=mugammaMass[phosel_3j0t_mu].flatten(),
+            #                                       category=phoCategory[phosel_3j0t_e],
+            #                                       lepFlavor='muon',
+            #                                       systematic=syst,
+            #                                       weight=evtWeight[phosel_3j0t_mu].flatten())
             
-        """
+        
         output['EventCount'] = len(df['event'])
         
         return output
