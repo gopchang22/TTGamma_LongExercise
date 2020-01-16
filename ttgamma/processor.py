@@ -569,11 +569,11 @@ class TTGammaProcessor(processor.ProcessorABC):
 
         # 2. DEFINE VARIABLES
         # define egammaMass, mass of combinations of tightElectron and leadingPhoton (hint: using the .cross() method)
-        egammaPairs = tightElectron.p4.cross( LeadingPhoton.p4)
-        egammaMass = tightElectron.p4.cross( LeadingPhoton.mass)
+        egammaPairs = tightElectron.p4.cross( LeadingPhoton.p4 ) 
+        egammaMass = (egammaPairs.i0 + egammaPairs.i1).mass
         # define egammaMass, mass of combinations of tightElectron and leadingPhoton (hint: using the .cross() method)
         mugammaPairs = tightMuon.p4.cross( LeadingPhoton.p4 )
-        mugammaMass = tightMuon.p4.cross( LeadingPhoton.mass )
+        mugammaMass = (mugammaPairs.i0 + mugammaPairs.i1).mass
         
         
         ###################
