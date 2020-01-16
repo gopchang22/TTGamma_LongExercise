@@ -436,12 +436,21 @@ class TTGammaProcessor(processor.ProcessorABC):
             #                                       pt_jes_up,   mass_jes_up
             #                                       pt_jes_down, mass_jes_down
             Jet_transformer.transform(jets)
-
+            
             # 4. ADD SYSTEMATICS
             #   If processing a jet systematic (based on value of self.jetSyst variable) update the jet pt and mass to reflect the jet systematic uncertainty variations
             #   Use the function updateJetP4(jets, pt=NEWPT, mass=NEWMASS) to update the pt and mass
 
+            if(self.jetSyst == 'JERUp'):
+                    updateJetP4(jets, pt=jets.pt_jer_up, mass=jet.mass_jer_up)
+            if(self.jetSyst == 'JERDown'):
+                    updateJetP4(jets, pt=jets.pt_jer_down, mass=jet.mass_jer_down)
+            if(self.jetSyst == 'JESUp'):
+                    updateJetP4(jets, pt=jets.pt_jes_up, mass=jet.mass_jes_up)
+            if(self.jetSyst == 'JESDown'):
+                    updateJetP4(jets, pt=jets.pt_jes_down, mass=jet.mass_jes_down)
 
+            
         ##check dR jet,lepton & jet,photon
         jetMu = jets['p4'].cross(tightMuon['p4'],nested=True)
         dRjetmu = ((jetMu.i0.delta_r(jetMu.i1)).min()>0.4) | (tightMuon.counts==0)
@@ -964,18 +973,18 @@ class TTGammaProcessor(processor.ProcessorABC):
 
             # 3. FILL HISTOGRAMS
             # fill photon_lepton_mass_3j0t histogram, using the egammaMass array, for events passing the phosel_3j0t_e 
-            #output['photon_lepton_mass_3j0t'].fill(dataset=dataset,
-            #                                       mass=egammaMass[phosel_3j0t_e].flatten(),
-            #                                       category=phoCategory[phosel_3j0t_e],
-            #                                       lepFlavor='electron',
-            #                                       systematic=syst,
-            #                                       weight=evtWeight[phosel_3j0t_e].flatten())
-            #output['photon_lepton_mass_3j0t'].fill(dataset=dataset,
-            #                                       mass=mugammaMass[phosel_3j0t_mu].flatten(),
-            #                                       category=phoCategory[phosel_3j0t_e],
-            #                                       lepFlavor='muon',
-            #                                       systematic=syst,
-            #                                       weight=evtWeight[phosel_3j0t_mu].flatten())
+            output['photon_lepton_mass_3j0t'].fill(dataset=dataset,
+                                                   mass=egammaMass[phosel_3j0t_e].flatten(),
+                                                   category=phoCategory[phosel_3j0t_e],
+                                                   lepFlavor='electron',
+                                                   systematic=syst,
+                                                   weight=evtWeight[phosel_3j0t_e].flatten())
+            output['photon_lepton_mass_3j0t'].fill(dataset=dataset,
+                                                   mass=mugammaMass[phosel_3j0t_mu].flatten(),
+                                                   category=phoCategory[phosel_3j0t_mu],
+                                                   lepFlavor='muon',
+                                                   systematic=syst,
+                                                   weight=evtWeight[phosel_3j0t_mu].flatten())
             
         
         output['EventCount'] = len(df['event'])
