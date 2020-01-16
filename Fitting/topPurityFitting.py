@@ -1,7 +1,7 @@
 # done by Nabin, Jieun, Arun, and Angel
 
 from ROOT import TFile, TFractionFitter, TObjArray
-import json
+
 import pprint
 
 ## open root file, created from the SaveHistogramsToRoot step, containing M3 distributions 
@@ -74,5 +74,3 @@ for syst in systematics:
 pp = pprint.PrettyPrinter(indent=4)
 pprint.pprint(results)
 
-with open('topPurity.json', 'w') as outputFile:
-    json.dump(results, outputFile)
