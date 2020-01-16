@@ -66,10 +66,11 @@ for syst in systematics:
     topPurityErr    = fit.GetFitter().Result().ParError(0)
     NontopPurityErr = fit.GetFitter().Result().ParError(1)
     ## Fill the dictionary "results" with the topPurity and topPurityErr for each systematic
-    results[syst] = (topPurity, topPurityErr, NontopPurity, NontopPurityErr)
+    results[syst] = (topPurity, topPurityErr)  #, NontopPurity, NontopPurityErr)
 
     del fit
 
 
 pp = pprint.PrettyPrinter(indent=4)
 pprint.pprint(results)
+
