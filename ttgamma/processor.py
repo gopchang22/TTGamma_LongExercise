@@ -471,6 +471,7 @@ class TTGammaProcessor(processor.ProcessorABC):
         # 1. ADD SELECTION
         # select the subset of tightJets which pass the Deep CSV tagger
         bTaggedJets = jets[jetSelectBtag]
+
        
 
 
