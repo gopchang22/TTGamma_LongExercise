@@ -475,6 +475,7 @@ class TTGammaProcessor(processor.ProcessorABC):
         # 1. ADD SELECTION
         # select the subset of tightJets which pass the Deep CSV tagger
         bTaggedJets = jets[jetSelectBtag]
+
        
 
 
@@ -599,12 +600,11 @@ class TTGammaProcessor(processor.ProcessorABC):
         # 2. DEFINE VARIABLES
         # define egammaMass, mass of combinations of tightElectron and leadingPhoton (hint: using the .cross() method)
         egammaPairs = tightElectron.p4.cross( leadingPhoton.p4)
-        egammaMass = (egammaPairs.i0 + egammaPairs.i1).mass
+        egammaMass = ( egammaPairs.i0 + egammaPairs.i1 ).mass
         # define egammaMass, mass of combinations of tightElectron and leadingPhoton (hint: using the .cross() method)
-        mugammaPairs = tightMuon.p4.cross( leadingPhoton.p4)
-        mugammaMass = (mugammaPairs.i0 + mugammaPairs.i1).mass
-        
-         
+        mugammaPairs = tightMuon.p4.cross( leadingPhoton.p4 )
+        mugammaMass = ( mugammaPairs.i0 + mugammaPairs.i1 ).mass
+
         ###################
         # PHOTON CATEGORIES
         ###################
@@ -638,6 +638,7 @@ class TTGammaProcessor(processor.ProcessorABC):
             # 2. DEFINE VARIABLES
             # define the photon categories for tight photon events
             # a genuine photon is a reconstructed photon which is matched to a generator level photon, and does not have a hadronic parent
+
             isGenPho = matchedPho & np.invert(hadronicParent) 
             # a hadronic photon is a reconstructed photon which is matched to a generator level photon, but has a hadronic parent
             isHadPho = matchedPho & hadronicParent
@@ -645,6 +646,7 @@ class TTGammaProcessor(processor.ProcessorABC):
             isMisIDele = matchedEle
             # a hadronic/fake photon is a reconstructed photon that does not fall within any of the above categories
             isHadFake = np.invert(isGenPho) & np.invert(isHadPho) & np.invert(isMisIDele)
+
             
             #define integer definition for the photon category axis
             phoCategory = 1*isGenPho + 2*isMisIDele + 3*isHadPho + 4*isHadFake
@@ -667,6 +669,7 @@ class TTGammaProcessor(processor.ProcessorABC):
             #####
             # 2. DEFINE VARIABLES
             # a genuine photon is a reconstructed photon which is matched to a generator level photon, and does not have a hadronic parent
+
             isGenPhoLoose = matchedPhoLoose & np.invert(hadronicParent)
             # a hadronic photon is a reconstructed photon which is matched to a generator level photon, but has a hadronic parent
             isHadPhoLoose = matchedPhoLoose & hadronicParent
@@ -675,9 +678,10 @@ class TTGammaProcessor(processor.ProcessorABC):
             # a hadronic/fake photon is a reconstructed photon that does not fall within any of the above categories
             isHadFakeLoose = np.invert(isGenPhoLoose) & np.invert(isHadPhoLoose) & np.invert(isMisIDeleLoose)
 
+
             #define integer definition for the photon category axis
             phoCategoryLoose = 1*isGenPhoLoose + 2*isMisIDeleLoose + 3*isHadPhoLoose + 4*isHadFakeLoose
-
+            
         ################
         # EVENT WEIGHTS
         ################
@@ -962,13 +966,13 @@ class TTGammaProcessor(processor.ProcessorABC):
             # fill photon_lepton_mass_3j0t histogram, using the egammaMass array, for events passing the phosel_3j0t_e 
             #output['photon_lepton_mass_3j0t'].fill(dataset=dataset,
             #                                       mass=egammaMass[phosel_3j0t_e].flatten(),
-            #                                       category=phoCategory,
+            #                                       category=phoCategory[phosel_3j0t_e],
             #                                       lepFlavor='electron',
             #                                       systematic=syst,
             #                                       weight=evtWeight[phosel_3j0t_e].flatten())
             #output['photon_lepton_mass_3j0t'].fill(dataset=dataset,
             #                                       mass=mugammaMass[phosel_3j0t_mu].flatten(),
-            #                                       category=phoCategory,
+            #                                       category=phoCategory[phosel_3j0t_e],
             #                                       lepFlavor='muon',
             #                                       systematic=syst,
             #                                       weight=evtWeight[phosel_3j0t_mu].flatten())
