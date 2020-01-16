@@ -595,12 +595,12 @@ class TTGammaProcessor(processor.ProcessorABC):
         # 2. DEFINE VARIABLES
         # define egammaMass, mass of combinations of tightElectron and leadingPhoton (hint: using the .cross() method)
         egammaPairs = tightElectron.p4.cross( leadingPhoton.p4)
-        egammaMass = tightElectron.p4.cross( leadingPhoton.mass)
+        egammaMass = ( egammaPairs.i0 + egammaPairs.i1 ).mass
         # define egammaMass, mass of combinations of tightElectron and leadingPhoton (hint: using the .cross() method)
         mugammaPairs = tightMuon.p4.cross( leadingPhoton.p4 )
-        mugammaMass = tightMuon.p4.cross( leadingPhoton.mass )
+        mugammaMass = ( mugammaPairs.i0 + mugammaPairs.i1 ).mass
         
-        """ 
+        
         ###################
         # PHOTON CATEGORIES
         ###################
@@ -634,13 +634,13 @@ class TTGammaProcessor(processor.ProcessorABC):
             # 2. DEFINE VARIABLES
             # define the photon categories for tight photon events
             # a genuine photon is a reconstructed photon which is matched to a generator level photon, and does not have a hadronic parent
-            isGenPho = ?
+            isGenPho = matchedPho & not hadronicParent
             # a hadronic photon is a reconstructed photon which is matched to a generator level photon, but has a hadronic parent
-            isHadPho = ?
+            isHadPho = matchedPho & hadronicParent
             # a misidentified electron is a reconstructed photon which is 
-            isMisIDele = ?
+            isMisIDele = matchedEle
             # a hadronic/fake photon is a reconstructed photon that does not fall within any of the above categories
-            isHadFake = ?
+            isHadFake = not matchedPho & not matchedEle
             
             #define integer definition for the photon category axis
             phoCategory = 1*isGenPho + 2*isMisIDele + 3*isHadPho + 4*isHadFake
@@ -674,7 +674,7 @@ class TTGammaProcessor(processor.ProcessorABC):
 
             #define integer definition for the photon category axis
             phoCategoryLoose = 1*isGenPhoLoose + 2*isMisIDeleLoose + 3*isHadPhoLoose + 4*isHadFakeLoose
-
+            """
         ################
         # EVENT WEIGHTS
         ################
