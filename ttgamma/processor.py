@@ -634,13 +634,13 @@ class TTGammaProcessor(processor.ProcessorABC):
             # 2. DEFINE VARIABLES
             # define the photon categories for tight photon events
             # a genuine photon is a reconstructed photon which is matched to a generator level photon, and does not have a hadronic parent
-            isGenPho = matchedPho & not hadronicParent
+            isGenPho = matchedPho and not hadronicParent
             # a hadronic photon is a reconstructed photon which is matched to a generator level photon, but has a hadronic parent
-            isHadPho = matchedPho & hadronicParent
+            isHadPho = matchedPho and hadronicParent
             # a misidentified electron is a reconstructed photon which is 
             isMisIDele = matchedEle
             # a hadronic/fake photon is a reconstructed photon that does not fall within any of the above categories
-            isHadFake = not matchedPho & not matchedEle
+            isHadFake = not matchedPho and not matchedEle
             
             #define integer definition for the photon category axis
             phoCategory = 1*isGenPho + 2*isMisIDele + 3*isHadPho + 4*isHadFake
@@ -664,13 +664,13 @@ class TTGammaProcessor(processor.ProcessorABC):
             #####
             # 2. DEFINE VARIABLES
             # a genuine photon is a reconstructed photon which is matched to a generator level photon, and does not have a hadronic parent
-            isGenPhoLoose = ?
+            isGenPhoLoose = matchedPhoLoose and not hadronicParent
             # a hadronic photon is a reconstructed photon which is matched to a generator level photon, but has a hadronic parent
-            isHadPhoLoose = ?
+            isHadPhoLoose = matchedPhoLoose and hadronicParent
             # a misidentified electron is a reconstructed photon which is 
-            isMisIDeleLoose = ?
+            isMisIDeleLoose = matchedEleLoose
             # a hadronic/fake photon is a reconstructed photon that does not fall within any of the above categories
-            isHadFakeLoose = ?
+            isHadFakeLoose = not matchedPhoLoose and not matchedEleLoose
 
             #define integer definition for the photon category axis
             phoCategoryLoose = 1*isGenPhoLoose + 2*isMisIDeleLoose + 3*isHadPhoLoose + 4*isHadFakeLoose
