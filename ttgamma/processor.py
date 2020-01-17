@@ -442,13 +442,13 @@ class TTGammaProcessor(processor.ProcessorABC):
             #   Use the function updateJetP4(jets, pt=NEWPT, mass=NEWMASS) to update the pt and mass
 
             if(self.jetSyst == 'JERUp'):
-                    updateJetP4(jets, pt=jets.pt_jer_up, mass=jet.mass_jer_up)
+                    updateJetP4(jets, pt=jets.pt_jer_up, mass=jets.mass_jer_up)
             if(self.jetSyst == 'JERDown'):
-                    updateJetP4(jets, pt=jets.pt_jer_down, mass=jet.mass_jer_down)
+                    updateJetP4(jets, pt=jets.pt_jer_down, mass=jets.mass_jer_down)
             if(self.jetSyst == 'JESUp'):
-                    updateJetP4(jets, pt=jets.pt_jes_up, mass=jet.mass_jes_up)
+                    updateJetP4(jets, pt=jets.pt_jes_up, mass=jets.mass_jes_up)
             if(self.jetSyst == 'JESDown'):
-                    updateJetP4(jets, pt=jets.pt_jes_down, mass=jet.mass_jes_down)
+                    updateJetP4(jets, pt=jets.pt_jes_down, mass=jets.mass_jes_down)
 
             
         ##check dR jet,lepton & jet,photon
